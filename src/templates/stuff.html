@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <base href="./">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>银行业务管理系统</title>
+    <link rel="stylesheet" href="../static/style1.css">
+    <script>
+
+        function openForm() {
+            var form = document.getElementById("insertForm");
+            form.style.display = "block";
+        }
+
+        function closeForm() {
+            document.getElementById("insertForm").style.display = "none";
+        }
+
+        function openwForm(key) {
+            document.getElementById("deleteWarning").style.display = "block";
+            delete_form.key.value = key;
+        }
+
+        function closewForm() {
+            document.getElementById("deleteWarning").style.display = "none";
+        }
+
+        function editRow(rowId) {
+            var row = document.getElementById(rowId);
+            var cells = row.getElementsByTagName('td');
+            for (var i = 1; i < cells.length - 1; i++) {
+                var cellText = cells[i].innerText;
+                cells[i].setAttribute('data-original', cellText);
+                if (i < cells.length - 2 && i != 3)
+                    cells[i].innerHTML = '<input type="text" style="width: 100px;" value="' + cellText + '">';
+            }
+            var updateButton = row.querySelector('.btn-success');
+            updateButton.innerText = '保存';
+            updateButton.setAttribute('onclick', 'saveRow("' + rowId + '")');
+            var deleteButton = row.querySelector('.btn-danger');
+            deleteButton.innerText = '取消';
+            deleteButton.setAttribute('onclick', 'cancelEditRow("' + rowId + '")');
+
+        }
+
+        function saveRow(rowId) {
+            var row = document.getElementById(rowId);
+            var cells = row.getElementsByTagName('td');
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/stuff';
+            var names = ['stuff_id', 'name', 'department_id', 'work', 'phone'];
+            for (var i = 1; i < cells.length - 2; i++) {
+                if (i == 3)
+                    continue;
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = names[i];
+                input.value = cells[i].querySelector('input').value;
+                form.appendChild(input);
+            }
+            var typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'type';
+            typeInput.value = 'update';
+            form.appendChild(typeInput);
+            var IDInput = document.createElement('input');
+            IDInput.type = 'hidden';
+            IDInput.name = 'stuff_id';
+            IDInput.value = rowId;
+            form.appendChild(IDInput);
+            document.body.appendChild(form);
+            form.submit();
+            form.remove();
+        }
+
+        function cancelEditRow(rowId) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/stuff';
+
+            var typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'type';
+            typeInput.value = 'cancel';
+            form.appendChild(typeInput);
+
+            document.body.appendChild(form);
+            form.submit();
+            form.remove();
+        }
+    </script>
+</head>
+
+<style>
+    .form-popup {
+        display: none;
+        position: fixed;
+        top: 40%;
+        left: 60%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        bottom: 0;
+        right: 15px;
+        border: 0px solid #f1f1f1;
+        z-index: 9;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<body class="app header-fixed sidebar-fixed aside-menu-fixed sidebar-lg-show">
+    <div class="form-popup" id="insertForm">
+        <form class="form-container" method="POST">
+            <h5>插入表单</h5>
+            <input type="hidden" name="type" value="insert">
+            <input type="text" placeholder="员工ID(必填)" name="stuff_id" required>
+            <input type="text" placeholder="姓名(必填)" name="name" required>
+            <input type="text" placeholder="部门编号(必填)" name="department_id"
+                required>
+            <input type="text" placeholder="联系电话(选填)" name="phone">
+            <input type="text" placeholder="居住地址(选填)" name="address">
+            <div style="display: flex;">
+                <button type="submit" class="btn btn-success"
+                    value="Refresh Page">确认</button>
+                <div style="margin-left: 10px;"></div>
+                <button type="button" class="btn bg-danger"
+                    onclick="closeForm()">取消</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="form-popup delete-form" id="deleteWarning">
+        <form class="form-container" name="delete_form" method="POST">
+            <style>
+                .delete-form {
+                    top: 50%;
+                    left: 60%;
+                }
+            </style>
+            <h2>确认删除？</h2>
+            <input type="hidden" name="type" value="delete">
+            <input type="hidden" name="key" value="">
+            <button type="submit" class="btn btn-success">确认</button>
+            <button type="button" class="btn bg-danger"
+                onclick="closewForm()">取消</button>
+        </form>
+    </div>
+
+    <header class="app-header navbar">
+        <span class="badge badge-light">数据库系统及应用Lab</span>
+    </header>
+
+    <div class="app-body">
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+                <ul class="nav">
+                    <li class="nav-title">银行业务管理系统</li>
+                    <a class="nav-link" href="index"> <i
+                            class="nav-icon icon-speedometer"></i> 首页 </a>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="bank"> <i
+                                class="nav-icon icon-cursor"></i> 支行管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle"
+                            href="department">
+                            <i class="nav-icon icon-cursor"></i> 部门管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a class="nav-link"
+                            href="stuff"> <i class="nav-icon icon-cursor"></i>
+                            员工管理</a>
+                    </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="client">
+                            <i class="nav-icon icon-cursor"></i> 客户管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="account">
+                            <i class="nav-icon icon-star"></i> 账户管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="debt"> <i
+                                class="nav-icon icon-bell"></i> 贷款管理</a> </li>
+                </ul>
+            </nav>
+        </div>
+
+        <main class="main">
+            <div class="container-fluid">
+                <div class="animated fadeIn">
+                    <div class="input-prepend input-group">
+                        <div class="insert-container">
+                            <form class="form-insert" method="POST">
+                                <input type="hidden" name="type" value="query">
+                                <input type="text" placeholder="员工ID" name="id"
+                                    size="20">
+                                <input type="text" placeholder="姓名" name="name"
+                                    size="20">
+                                <input type="text" placeholder="部门编号"
+                                    name="department_id" size="20">
+                                <input type="text" placeholder="职位" name="work"
+                                    size="20">
+                                <button class="btn btn-info"
+                                    type="submit">查询</button>
+                                <button class="btn btn-warning"
+                                    onclick="openFormAndPreventSubmit(event)">添加</button>
+                                <script>
+                                    function openFormAndPreventSubmit(event) {
+                                        // 阻止表单提交的默认行为
+                                        event.preventDefault();
+                                        // 打开表单
+                                        openForm();
+                                    }
+                                </script>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="container-fluid">
+                        <table class="table table-striped" id="bank-table">
+                            <thead>
+                                <tr> {% for i in labels %}
+                                    <th> {{ i }} </th>
+                                    {% endfor %}
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in content %}
+                                <tr id="{{ row.Stuff_ID }}">
+                                    <td>{{ row.Stuff_ID }}</td>
+                                    <td>{{ row.name }}</td>
+                                    <td>{{ row.Department_ID }}</td>
+                                    <td>{{ row.work }}</td>
+                                    <td>{{ row.phone if row.phone
+                                        is not
+                                        none
+                                        else ''}}</td>
+                                    <td>{{ row.address if row.address
+                                        is not
+                                        none
+                                        else ''}}</td>
+                                    <td> <img
+                                            src="{{ url_for('static', filename='photo/' + row.figure) }}"
+                                            width="50" height="50">
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success"
+                                            onclick="editRow('{{ row.Stuff_ID }}')">更新</button>
+                                        <button class="btn btn-danger"
+                                            onclick="openwForm('{{ row.Stuff_ID }}')">删除</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <div>DBMS &copy; 2023.</div>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <base href="./">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>银行业务管理系统</title>
+    <link rel="stylesheet" href="../static/style1.css">
+
+    <script>
+        function openForm() {
+            console.log("openForm");
+            var form = document.getElementById("insertForm");
+            form.style.display = "block";
+            console.log("keep openForm");
+        }
+
+        function closeForm() {
+            document.getElementById("insertForm").style.display = "none";
+        }
+
+        function openwForm(key) {
+            document.getElementById("deleteWarning").style.display = "block";
+            delete_form.key.value = key;
+        }
+
+        function closewForm() {
+            document.getElementById("deleteWarning").style.display = "none";
+        }
+        function editRow(rowId) {
+            var row = document.getElementById(rowId);
+            var cells = row.getElementsByTagName('td');
+
+            // 遍历每个单元格，将其内容设置为可编辑
+            for (var i = 1; i < cells.length - 1; i++) {
+                var cellText = cells[i].innerText;
+                cells[i].setAttribute('data-original', cellText); //保存旧的内容
+                cells[i].innerHTML = '<input type="text" style="width: 100px;"value="' + cellText + '">';
+            }
+
+            // 将更新按钮改为保存按钮
+            var updateButton = row.querySelector('.btn-success');
+            updateButton.innerText = '保存';
+            updateButton.setAttribute('onclick', 'saveRow("' + rowId + '")');
+
+            // 将删除按钮改为取消按钮
+            var deleteButton = row.querySelector('.btn-danger');
+            deleteButton.innerText = '取消';
+            deleteButton.setAttribute('onclick', 'cancelEditRow("' + rowId + '")');
+        }
+
+
+        function saveRow(rowId) {
+            var row = document.getElementById(rowId);
+            var cells = row.getElementsByTagName('td');
+
+            // 创建一个新的表单元素
+            var form = document.createElement('form');
+            form.method = 'POST'; // 设置表单提交方法
+            form.action = '/client'; // 设置表单提交地址
+            names = ['key', 'name', 'phone', 'address']
+            // 遍历每个单元格，将文本框的内容添加到表单中
+            for (var i = 1; i < cells.length - 1; i++) {
+                var input = document.createElement('input');
+                input.type = 'hidden'; // 隐藏输入框
+                input.name = names[i]; // 设置输入框的名称
+                input.value = cells[i].querySelector('input').value; // 获取文本框的内容并赋值给输入框
+                form.appendChild(input); // 将输入框添加到表单中
+            }
+
+            // 添加一个隐藏的输入框来设置类型值
+            var typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'type';
+            typeInput.value = 'update'; // 设置类型为更新
+            form.appendChild(typeInput);
+            var IDInput = document.createElement('input');
+            IDInput.type = 'hidden';
+            IDInput.name = names[0]
+            IDInput.value = rowId; // 设置类型为更新
+            form.appendChild(IDInput);
+
+            // 将表单添加到文档中
+            document.body.appendChild(form);
+
+            // 提交表单
+            form.submit();
+
+            // 在提交表单后，删除动态生成的表单元素
+            form.remove();
+        }
+        function cancelEditRow(rowId) {
+            var row = document.getElementById(rowId);
+            var cells = row.getElementsByTagName('td');
+
+            // 将单元格内容恢复为原始内容
+            for (var i = 1; i < cells.length - 1; i++) {
+                var originalContent = cells[i].getAttribute('data-original');
+                cells[i].innerHTML = originalContent;
+            }
+
+            // 将保存按钮改回更新按钮
+            var updateButton = row.querySelector('.btn-success');
+            updateButton.innerText = '更新';
+            updateButton.setAttribute('onclick', 'editRow("' + rowId + '")');
+
+            // 将取消按钮改回删除按钮
+            var deleteButton = row.querySelector('.btn-danger');
+            deleteButton.innerText = '删除';
+            deleteButton.setAttribute('onclick', 'openwForm("' + rowId + '")');
+        } 
+    </script>
+</head>
+<style>
+    .form-popup {
+        display: none;
+        position: fixed;
+        top: 40%;
+        left: 60%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        bottom: 0;
+        right: 15px;
+        border: 0px solid #f1f1f1;
+        z-index: 9;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<body class="app header-fixed sidebar-fixed aside-menu-fixed sidebar-lg-show">
+    <div class="form-popup" id="insertForm">
+        <form class="form-container" method="POST">
+            <h5>插入表单</h5>
+            <input type="hidden" name="key" value="">
+            <input type="hidden" name="type" value="insert">
+            <input type="text" placeholder="客户ID(必填)" name="customer_id"
+                required="">
+            <input type="text" placeholder="客户姓名(必填)" name="name" required="">
+            <input type="text" placeholder="联系电话(选填)" name="phone">
+            <input type="text" placeholder="所在城市(选填)" name="address">
+            <div style="display: flex;">
+                <button type="submit" class="btn btn-success"
+                    value="Refresh Page">确认</button>
+                <div style="margin-left: 10px;"></div>
+                <button type="button" class="btn bg-danger"
+                    onclick="closeForm()">取消</button>
+            </div>
+        </form>
+    </div>
+    <div class="form-popup delete-form" id="deleteWarning">
+        <form class="form-container" name="delete_form" method="POST">
+            <style>
+                .delete-form {
+                    top: 50%;
+                    left: 60%;
+                }
+            </style>
+            <p> </p>
+            <h2>确认删除？</h2>
+            {% if not authorized %}
+            <p class="warning-text">如果删除账户,登录系统时需要重新注册</p>
+            {% endif %}
+            <p> </p>
+            <p> </p>
+            <input type="hidden" name="type" value="delete">
+            <input type="hidden" name="key" value="">
+            <button type="submit" class="btn btn-success" value="Refresh Page"
+                onclick="window.location.reload();">确认</button>
+            <button type="button" class="btn bg-danger"
+                onclick="closewForm();">取消</button>
+        </form>
+    </div>
+    <header class="app-header navbar"><span
+            class="badge badge-light">数据库系统及应用Lab</span> </header>
+    <div class="app-body">
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+                <ul class="nav">
+                    {% if authorized %}
+                    <li class="nav-title">银行管理系统</li>
+                    <a class="nav-link nav-dropdown-toggle" href="index"> <i
+                            class="nav-icon icon-speedometer"></i> 首页
+                    </a>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="bank"> <i
+                                class="nav-icon icon-puzzle"></i>
+                            支行管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle"
+                            href="department">
+                            <i class="nav-icon icon-cursor"></i> 部门管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="stuff">
+                            <i class="nav-icon icon-cursor"></i> 员工管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a class="nav-link"
+                            href="client">
+                            <i class="nav-icon icon-cursor"></i> 客户管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="account">
+                            <i class="nav-icon icon-star"></i> 账户管理</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="debt"> <i
+                                class="nav-icon icon-bell"></i> 贷款管理</a> </li>
+                    {% else %}
+                    <li class="nav-title">银行客户系统</li>
+                    <a class="nav-link nav-dropdown-toggle" href="index"> <i
+                            class="nav-icon icon-speedometer"></i> 首页
+                    </a>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="bank"> <i
+                                class="nav-icon icon-puzzle"></i>
+                            支行查询</a> </li>
+                    <li class="nav-item nav-dropdown"> <a class="nav-link"
+                            href="client">
+                            <i class="nav-icon icon-cursor"></i> 个人信息</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="account">
+                            <i class="nav-icon icon-star"></i> 账户查询</a> </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="detail">
+                            <i class="nav-icon icon-cursor"></i> 账户明细查询</a>
+                    </li>
+                    <li class="nav-item nav-dropdown"> <a
+                            class="nav-link nav-dropdown-toggle" href="debt"> <i
+                                class="nav-icon icon-bell"></i> 贷款查询</a> </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <button class="sidebar-minimizer brand-minimizer"
+                type="button"></button>
+        </div>
+        <main class="main">
+            <div class="container-fluid">
+                <div class="animated fadeIn">
+                    {% if authorized %}
+                    <div class="input-prepend input-group">
+                        <div class="input-group-prepend">
+                            <div class="insert-container">
+                                <form class="form-insert" method="POST">
+                                    <input type="hidden" name="type"
+                                        value="query">
+                                    <input type="text" placeholder="客户ID"
+                                        name="id">
+                                    <input type="text" placeholder="客户姓名"
+                                        name="name">
+                                    <input type="text" placeholder="联系电话"
+                                        name="phone">
+                                    <input type="text" placeholder="所在城市"
+                                        name="address">
+                                    {% if authorized %}
+                                    <button class="btn btn-info"
+                                        type="submit">查询</button>
+                                    <button class="btn btn-warning"
+                                        onclick="openFormAndPreventSubmit(event)">添加</button>
+                                    {% endif %}
+                                </form>
+                            </div>
+
+                            <script>
+                                function openFormAndPreventSubmit(event) {
+                                    // 阻止表单提交的默认行为
+                                    event.preventDefault();
+                                    // 打开表单
+                                    openForm();
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-5">
+                                    <h4 class="card-title mb-0">客户信息</h4>
+                                </div>
+                            </div>
+                            <div>
+                                <div>
+                                    <table id="bank-table">
+                                        <tr>
+                                            <th>客户ID</th>
+                                            <th>客户姓名</th>
+                                            <th>联系电话</th>
+                                            <th>所在城市</th>
+                                            <th>操作</th>
+                                        </tr>
+                                        {% for i in content %}
+                                        <tr id="{{ i.Customer_ID }}">
+                                            <td>{{ i.Customer_ID }}</td>
+                                            <td>{{ i.name }}</td>
+                                            <td>{{ i.phone if i.phone is not
+                                                none else '' }}</td>
+                                            <td>{{ i.address if i.address is not
+                                                none
+                                                else '' }}</td>
+                                            <td><label class="btn btn-success"
+                                                    onclick="editRow('{{ i.Customer_ID }}')">修改</label>
+                                                <label class="btn btn-danger"
+                                                    onclick="openwForm(this.parentNode.parentNode.id)">删除</label>
+                                                <style>
+                                                    .btn-info {
+                                                        color: white;
+                                                    }
+                                                </style>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <aside class="aside-menu">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item"> <a class="nav-link active"
+                        data-toggle="tab" href="#timeline" role="tab"> <i
+                            class="icon-list"></i> </a> </li>
+                <li class="nav-item"> <a class="nav-link" data-toggle="tab"
+                        href="#messages" role="tab"> <i class="icon-speech"></i>
+                    </a> </li>
+                <li class="nav-item"> <a class="nav-link" data-toggle="tab"
+                        href="#settings" role="tab"> <i
+                            class="icon-settings"></i> </a> </li>
+            </ul>
+        </aside>
+    </div>
+</body>
+
+</html>
