@@ -39,11 +39,10 @@ def generate_next_record_id():
 
 
 @app.route('/', methods=['GET', 'POST'])
-def start():
-    global cur_ID
-    cur_ID = 'C001'
-    return render_template('index.html', authorized=authorized, cur_ID=cur_ID)
-
+# def start():
+# global cur_ID
+# cur_ID = 'C001'
+# return render_template('index.html', authorized=authorized, cur_ID=cur_ID)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -232,14 +231,18 @@ def bank():
                     for loan in loan_result:
                         db.session.delete(loan)
                     # 查询银行下的部门
-                    departments = db.session.query(Department).filter_by(
+                    departments = db.session.query(Department.Department_ID).filter_by(
                         Bank_ID=bank_id).subquery()
                     # 删除部门下的员工
-                    db.session.query(Stuff).filter(
-                        Stuff.Department_ID.in_(departments)).delete()
+                    stuffs = db.session.query(Stuff).filter(
+                        Stuff.Department_ID.in_(departments)).all()
+                    for stuff in stuffs:
+                        db.session.delete(stuff)
                     # 删除部门
-                    db.session.query(Department).filter_by(
-                        Bank_ID=bank_id).delete()
+                    departments = db.session.query(Department).filter_by(
+                        Bank_ID=bank_id).all()
+                    for department in departments:
+                        db.session.delete(department)
                     # 最后删除银行
                     bank_result = db.session.query(Bank).filter_by(
                         Bank_ID=bank_id).first()
@@ -668,7 +671,7 @@ def client():
                         # 同时创建登录账户
                         new_user = User(username=customer_id,
                                         password=customer_id)
-                        db.add(new_user)
+                        db.session.add(new_user)
                         db.session.commit()
                         filters = []
                     else:
